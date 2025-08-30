@@ -128,12 +128,5 @@ The backend exposes a RESTful API under `/api`. See [server/routes](server/route
 - [server/models](server/models) - Mongoose models
 - [server/utils/emailService.js](server/utils/emailService.js) - Email notification logic
 
-## Contributing
-
-Pull requests are welcome! For major changes, please open an issue first to discuss what you would like to change.
-
-## License
-
-[MIT](LICENSE)
 
 
