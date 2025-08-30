@@ -15,20 +15,41 @@ const { errorHandler } = require('./middleware/errorHandler');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Security middleware
-app.use(helmet());
-app.use(cors({
-  origin: process.env.NODE_ENV === 'production' 
-    ? ['https://yourdomain.com'] 
-    : ['http://localhost:3000'],
-  credentials: true
-}));
+// Security middleware with CSP fix for images
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'"],
+        styleSrc: ["'self'", "https:", "'unsafe-inline'"],
+        imgSrc: ["'self'", "data:", "https:"], // ✅ allow external images (Unsplash, etc.)
+        connectSrc: ["'self'", "https:"],
+        fontSrc: ["'self'", "https:", "data:"],
+        objectSrc: ["'none'"],
+        upgradeInsecureRequests: [],
+      },
+    },
+  })
+);
+
+// CORS config
+app.use(
+  cors({
+    origin:
+      process.env.NODE_ENV === 'production'
+        ? ['https://yourdomain.com'] // 🔧 replace with your frontend domain on Render
+        : ['http://localhost:3000'],
+    credentials: true,
+  })
+);
 
 // Rate limiting
 const limiter = rateLimit({
-  windowMs: parseInt(process.env.RATE_LIMIT_WINDOW) * 60 * 1000 || 15 * 60 * 1000, // default 15 minutes
+  windowMs:
+    parseInt(process.env.RATE_LIMIT_WINDOW) * 60 * 1000 || 15 * 60 * 1000, // default 15 minutes
   max: parseInt(process.env.RATE_LIMIT_MAX) || 100, // default 100 requests
-  message: 'Too many requests from this IP, please try again later.'
+  message: 'Too many requests from this IP, please try again later.',
 });
 app.use('/api/', limiter);
 
@@ -64,7 +85,8 @@ app.use(errorHandler);
 // Database connection
 const connectDB = async () => {
   try {
-    const mongoURI = process.env.MONGO_URI || 'mongodb://localhost:27017/devnovate-blog';
+    const mongoURI =
+      process.env.MONGO_URI || 'mongodb://localhost:27017/devnovate-blog';
     await mongoose.connect(mongoURI, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
@@ -80,7 +102,7 @@ const connectDB = async () => {
 // Start server with database connection
 const startServer = async () => {
   const dbConnected = await connectDB();
-  
+
   if (dbConnected) {
     app.listen(PORT, () => {
       console.log(`🚀 Server running on port ${PORT}`);
@@ -94,7 +116,7 @@ const startServer = async () => {
     console.log('   1. Install MongoDB locally, or');
     console.log('   2. Use MongoDB Atlas (free cloud service)');
     console.log('   3. Update MONGO_URI in .env file');
-    
+
     app.listen(PORT, () => {
       console.log(`🚀 Server running on port ${PORT} (limited mode)`);
       console.log(`🌐 Frontend: http://localhost:3000`);
