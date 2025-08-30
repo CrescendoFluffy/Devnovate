@@ -26,8 +26,8 @@ app.use(cors({
 
 // Rate limiting
 const limiter = rateLimit({
-  windowMs: parseInt(process.env.RATE_LIMIT_WINDOW) * 60 * 1000, // 15 minutes
-  max: parseInt(process.env.RATE_LIMIT_MAX), // limit each IP to 100 requests per windowMs
+  windowMs: parseInt(process.env.RATE_LIMIT_WINDOW) * 60 * 1000 || 15 * 60 * 1000, // default 15 minutes
+  max: parseInt(process.env.RATE_LIMIT_MAX) || 100, // default 100 requests
   message: 'Too many requests from this IP, please try again later.'
 });
 app.use('/api/', limiter);
@@ -64,7 +64,7 @@ app.use(errorHandler);
 // Database connection
 const connectDB = async () => {
   try {
-    const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/devnovate-blog';
+    const mongoURI = process.env.MONGO_URI || 'mongodb://localhost:27017/devnovate-blog';
     await mongoose.connect(mongoURI, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
@@ -93,7 +93,7 @@ const startServer = async () => {
     console.log('💡 To enable full functionality, please:');
     console.log('   1. Install MongoDB locally, or');
     console.log('   2. Use MongoDB Atlas (free cloud service)');
-    console.log('   3. Update MONGODB_URI in .env file');
+    console.log('   3. Update MONGO_URI in .env file');
     
     app.listen(PORT, () => {
       console.log(`🚀 Server running on port ${PORT} (limited mode)`);
@@ -113,14 +113,3 @@ process.on('SIGTERM', () => {
     process.exit(0);
   });
 });
-
-const path = require("path");
-
-// Serve React build files in production
-if (process.env.NODE_ENV === "production") {
-  app.use(express.static(path.join(__dirname, "../client/build")));
-
-  app.get("*", (req, res) => {
-    res.sendFile(path.join(__dirname, "../client/build", "index.html"));
-  });
-}
